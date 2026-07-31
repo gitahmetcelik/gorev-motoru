@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: gorev-platformu
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gorev_platformu}
+    username: ${SPRING_DATASOURCE_USERNAME:gorev}
+    password: ${SPRING_DATASOURCE_PASSWORD:gorev_sifre}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    schemas: motor
+    default-schema: motor
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+  data:
+    web:
+      pageable:
+        page-parameter: sayfa
+        size-parameter: boyut
+        default-page-size: 20
+        max-page-size: 100
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:gorev}
+    password: ${SPRING_RABBITMQ_PASSWORD:gorev_sifre}
+    listener:
+      simple:
+        retry:
+          # Bu, is mantigi retry politikasi degil (o outbox+delayed-exchange ile yapiliyor).
+          # Bu sadece container seviyesinde beklenmeyen hatalarin (orn. commit hatasi) sonsuz
+          # nack/redeliver donguisune girmemesi icin bir guvenlik agi; tukenince mesaj DLX'e duser.
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2.0
+          max-interval: 5s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    distribution:
+      percentiles:
+        "[gorev.isleme.suresi]": 0.5, 0.95
+
+motor:
+  security:
+    client-id: ${MOTOR_CLIENT_ID:gorev-client}
+    client-secret: ${MOTOR_CLIENT_SECRET:degistir-bu-sifreyi-prod-ortaminda}
+    jwt:
+      gizli-anahtar: ${MOTOR_JWT_GIZLI_ANAHTAR:en-az-32-byte-uzunlugunda-gizli-bir-anahtar-buraya-degistir-lutfen}
+      gecerlilik-dakika: 15
+  worker:
+    tuketici-aktif: true

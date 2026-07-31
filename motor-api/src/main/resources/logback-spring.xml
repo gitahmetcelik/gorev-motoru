@@ -1,0 +1,11 @@
+<configuration>
+    <appender name="KONSOL" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"servis":"${SPRING_PROFILES_ACTIVE:-varsayilan}"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="KONSOL"/>
+    </root>
+</configuration>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Görev Platformu — Motor Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --surface-2: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --gridline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6;
+    --status-good: #0ca30c;
+    --status-warning: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --surface-2: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --gridline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--surface-2);
+    color: var(--text-primary);
+  }
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 1.1rem; margin: 0; }
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .kart {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  .stat-tile { text-align: center; }
+  .stat-tile .deger {
+    font-size: 2rem;
+    font-weight: 600;
+    font-variant-numeric: proportional-nums;
+  }
+  .stat-tile .etiket { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--gridline);
+    font-variant-numeric: tabular-nums;
+  }
+  th { color: var(--text-secondary); font-weight: 500; }
+  tr:hover { background: var(--surface-2); cursor: pointer; }
+  .durum-rozet {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  .durum-TAMAMLANDI { background: var(--status-good); }
+  .durum-BASARISIZ { background: var(--status-critical); }
+  .durum-IPTAL_EDILDI { background: var(--status-serious); }
+  .durum-CALISIYOR, .durum-KUYRUKTA, .durum-BEKLIYOR, .durum-YENIDEN_DENENECEK { background: var(--status-warning); color: #0b0b0b; }
+  .arac-cubugu { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  select, input, button {
+    font: inherit;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-primary);
+  }
+  button { cursor: pointer; background: var(--series-1); color: #fff; border: none; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.ikincil { background: transparent; color: var(--text-primary); border: 1px solid var(--border); }
+  .sekmeler { display: flex; gap: 4px; margin-bottom: 16px; }
+  .sekme { padding: 8px 14px; border-radius: 6px 6px 0 0; cursor: pointer; color: var(--text-secondary); }
+  .sekme.aktif { background: var(--surface-1); color: var(--text-primary); font-weight: 600; border: 1px solid var(--border); border-bottom: none; }
+  #girisEkrani { max-width: 360px; margin: 80px auto; }
+  #girisEkrani .kart { display: flex; flex-direction: column; gap: 10px; }
+  .hata-mesaji { color: var(--status-critical); font-size: 0.85rem; }
+  .sayfalama { display: flex; gap: 8px; align-items: center; margin-top: 10px; justify-content: flex-end; }
+  .kucuk-not { color: var(--text-muted); font-size: 0.78rem; }
+  #detayPaneli { display: none; }
+  #detayPaneli.gorunur { display: block; }
+</style>
+</head>
+<body>
+
+<div id="girisEkrani">
+  <div class="kart">
+    <h2 style="margin:0 0 8px">Görev Platformu — Motor Dashboard</h2>
+    <label>Client ID<input id="girisClientId" value="gorev-client"></label>
+    <label>Client Secret<input id="girisClientSecret" type="password"></label>
+    <button id="girisButonu">Giriş yap</button>
+    <div id="girisHata" class="hata-mesaji"></div>
+  </div>
+</div>
+
+<div id="uygulama" style="display:none">
+  <header>
+    <h1>Görev Platformu — Motor Dashboard</h1>
+    <button class="ikincil" id="cikisButonu">Çıkış</button>
+  </header>
+  <main>
+    <div class="kart">
+      <div class="stat-grid" id="metrikGrid">
+        <div class="stat-tile"><div class="deger" id="mYuksek">–</div><div class="etiket">Yüksek kuyruk</div></div>
+        <div class="stat-tile"><div class="deger" id="mNormal">–</div><div class="etiket">Normal kuyruk</div></div>
+        <div class="stat-tile"><div class="deger" id="mDusuk">–</div><div class="etiket">Düşük kuyruk</div></div>
+        <div class="stat-tile"><div class="deger" id="mDlq">–</div><div class="etiket">DLQ</div></div>
+        <div class="stat-tile"><div class="deger" id="mCalisan">–</div><div class="etiket">Çalışan görev</div></div>
+      </div>
+    </div>
+
+    <div class="sekmeler">
+      <div class="sekme aktif" data-sekme="gorevler">Görevler</div>
+      <div class="sekme" data-sekme="dlq">Ölü Mektup Kutusu</div>
+    </div>
+
+    <div id="gorevlerSekmesi" class="kart">
+      <div class="arac-cubugu">
+        <select id="durumFiltre"><option value="">Tüm durumlar</option></select>
+        <select id="tipFiltre"><option value="">Tüm tipler</option></select>
+        <button class="ikincil" id="yenileGorevler">Yenile</button>
+      </div>
+      <table>
+        <thead><tr><th>Tip</th><th>Durum</th><th>Öncelik</th><th>Deneme</th><th>Oluşturulma</th><th></th></tr></thead>
+        <tbody id="gorevTablosu"></tbody>
+      </table>
+      <div class="sayfalama">
+        <button class="ikincil" id="oncekiSayfa">‹ Önceki</button>
+        <span class="kucuk-not" id="sayfaBilgisi"></span>
+        <button class="ikincil" id="sonrakiSayfa">Sonraki ›</button>
+      </div>
+
+      <div id="detayPaneli" class="kart" style="margin-top:16px">
+        <h3 style="margin-top:0">Deneme geçmişi — <span id="detayGorevId" class="kucuk-not"></span></h3>
+        <table>
+          <thead><tr><th>#</th><th>Durum</th><th>Başlangıç</th><th>Bitiş</th><th>Worker</th><th>Hata</th></tr></thead>
+          <tbody id="denemeTablosu"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="dlqSekmesi" class="kart" style="display:none">
+      <table>
+        <thead><tr><th>Görev ID</th><th>Son hata</th><th>Giriş zamanı</th><th>Yeniden gönderildi mi</th><th></th></tr></thead>
+        <tbody id="dlqTablosu"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = '';
+let token = sessionStorage.getItem('gorevToken');
+let gorevSayfa = 0;
+const GOREV_DURUMLARI = ['BEKLIYOR','KUYRUKTA','CALISIYOR','TAMAMLANDI','BASARISIZ','YENIDEN_DENENECEK','IPTAL_EDILDI'];
+
+async function apiFetch(yol, secenekler = {}) {
+  const yanit = await fetch(API + yol, {
+    ...secenekler,
+    headers: { ...(secenekler.headers || {}), 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+  });
+  if (yanit.status === 401 || yanit.status === 403) {
+    girisEkraniniGoster();
+    throw new Error('Yetkilendirme gecerli degil');
+  }
+  return yanit;
+}
+
+function girisEkraniniGoster() {
+  sessionStorage.removeItem('gorevToken');
+  token = null;
+  document.getElementById('girisEkrani').style.display = 'block';
+  document.getElementById('uygulama').style.display = 'none';
+}
+
+function uygulamayiGoster() {
+  document.getElementById('girisEkrani').style.display = 'none';
+  document.getElementById('uygulama').style.display = 'block';
+  ilkYuklemeYap();
+}
+
+document.getElementById('girisButonu').addEventListener('click', async () => {
+  const clientId = document.getElementById('girisClientId').value;
+  const clientSecret = document.getElementById('girisClientSecret').value;
+  document.getElementById('girisHata').textContent = '';
+  try {
+    const yanit = await fetch(API + '/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, clientSecret })
+    });
+    if (!yanit.ok) {
+      document.getElementById('girisHata').textContent = 'Giriş başarısız (client id/secret hatalı)';
+      return;
+    }
+    const gövde = await yanit.json();
+    token = gövde.accessToken;
+    sessionStorage.setItem('gorevToken', token);
+    uygulamayiGoster();
+  } catch (e) {
+    document.getElementById('girisHata').textContent = 'Sunucuya ulaşılamadı';
+  }
+});
+
+document.getElementById('cikisButonu').addEventListener('click', girisEkraniniGoster);
+
+document.querySelectorAll('.sekme').forEach(sekme => {
+  sekme.addEventListener('click', () => {
+    document.querySelectorAll('.sekme').forEach(s => s.classList.remove('aktif'));
+    sekme.classList.add('aktif');
+    const hedef = sekme.dataset.sekme;
+    document.getElementById('gorevlerSekmesi').style.display = hedef === 'gorevler' ? 'block' : 'none';
+    document.getElementById('dlqSekmesi').style.display = hedef === 'dlq' ? 'block' : 'none';
+    if (hedef === 'dlq') dlqYukle();
+  });
+});
+
+async function metrikleriYukle() {
+  try {
+    const yanit = await apiFetch('/metrikler/ozet');
+    const m = await yanit.json();
+    document.getElementById('mYuksek').textContent = m.kuyrukYuksek;
+    document.getElementById('mNormal').textContent = m.kuyrukNormal;
+    document.getElementById('mDusuk').textContent = m.kuyrukDusuk;
+    document.getElementById('mDlq').textContent = m.dlq;
+    document.getElementById('mCalisan').textContent = m.calisanGorevSayisi;
+  } catch (e) { /* sessizce atla, bir sonraki tikte tekrar dener */ }
+}
+
+async function gorevTanimlariniYukle() {
+  const yanit = await apiFetch('/gorev-tanimlari');
+  const tanimlar = await yanit.json();
+  const secim = document.getElementById('tipFiltre');
+  tanimlar.forEach(t => {
+    const secenek = document.createElement('option');
+    secenek.value = t.tip; secenek.textContent = t.tip;
+    secim.appendChild(secenek);
+  });
+}
+
+function durumSecimleriniDoldur() {
+  const secim = document.getElementById('durumFiltre');
+  GOREV_DURUMLARI.forEach(d => {
+    const secenek = document.createElement('option');
+    secenek.value = d; secenek.textContent = d;
+    secim.appendChild(secenek);
+  });
+}
+
+function rozetOlustur(durum) {
+  return `<span class="durum-rozet durum-${durum}">${durum}</span>`;
+}
+
+async function gorevleriYukle() {
+  const durum = document.getElementById('durumFiltre').value;
+  const tip = document.getElementById('tipFiltre').value;
+  const parametreler = new URLSearchParams({ sayfa: gorevSayfa, boyut: 20 });
+  if (durum) parametreler.set('durum', durum);
+  if (tip) parametreler.set('tip', tip);
+  const yanit = await apiFetch('/gorevler?' + parametreler.toString());
+  const sayfaVerisi = await yanit.json();
+  const govde = document.getElementById('gorevTablosu');
+  govde.innerHTML = '';
+  sayfaVerisi.icerik.forEach(g => {
+    const satir = document.createElement('tr');
+    const iptalEdilebilir = ['BEKLIYOR','KUYRUKTA','CALISIYOR'].includes(g.durum);
+    satir.innerHTML = `<td>${g.tip}</td><td>${rozetOlustur(g.durum)}</td><td>${g.oncelik}</td>
+      <td>${g.denemeSayisi}</td><td>${new Date(g.olusturulma).toLocaleString('tr-TR')}</td>
+      <td>${iptalEdilebilir ? `<button class="ikincil iptal-butonu" data-id="${g.id}">İptal</button>` : ''}</td>`;
+    satir.querySelector('td').parentElement.addEventListener('click', (e) => {
+      if (e.target.closest('.iptal-butonu')) return;
+      denemeGecmisiniYukle(g.id);
+    });
+    const iptalButonu = satir.querySelector('.iptal-butonu');
+    if (iptalButonu) {
+      iptalButonu.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await apiFetch(`/gorevler/${g.id}/iptal`, { method: 'POST' });
+        gorevleriYukle();
+      });
+    }
+    govde.appendChild(satir);
+  });
+  document.getElementById('sayfaBilgisi').textContent =
+    `Sayfa ${sayfaVerisi.sayfaNo + 1} / ${Math.max(sayfaVerisi.toplamSayfa, 1)} (${sayfaVerisi.toplamEleman} görev)`;
+  document.getElementById('oncekiSayfa').disabled = sayfaVerisi.sayfaNo === 0;
+  document.getElementById('sonrakiSayfa').disabled = sayfaVerisi.sayfaNo + 1 >= sayfaVerisi.toplamSayfa;
+}
+
+async function denemeGecmisiniYukle(gorevId) {
+  const yanit = await apiFetch(`/gorevler/${gorevId}/denemeler`);
+  const denemeler = await yanit.json();
+  document.getElementById('detayGorevId').textContent = gorevId;
+  const govde = document.getElementById('denemeTablosu');
+  govde.innerHTML = '';
+  denemeler.forEach(d => {
+    const satir = document.createElement('tr');
+    satir.innerHTML = `<td>${d.denemeNo}</td><td>${d.durum}</td>
+      <td>${new Date(d.baslangic).toLocaleString('tr-TR')}</td>
+      <td>${d.bitis ? new Date(d.bitis).toLocaleString('tr-TR') : '-'}</td>
+      <td>${d.workerKimlik}</td><td>${d.hataMesaji || ''}</td>`;
+    govde.appendChild(satir);
+  });
+  document.getElementById('detayPaneli').classList.add('gorunur');
+}
+
+async function dlqYukle() {
+  const yanit = await apiFetch('/olu-mektup-kutusu?sayfa=0&boyut=20');
+  const sayfaVerisi = await yanit.json();
+  const govde = document.getElementById('dlqTablosu');
+  govde.innerHTML = '';
+  sayfaVerisi.icerik.forEach(k => {
+    const satir = document.createElement('tr');
+    const yenidenGonderilebilir = k.gorevId && !k.yenidenGonderildiMi;
+    satir.innerHTML = `<td>${k.gorevId || '(zehirli mesaj)'}</td><td>${k.sonHata || ''}</td>
+      <td>${new Date(k.girisZamani).toLocaleString('tr-TR')}</td>
+      <td>${k.yenidenGonderildiMi ? 'Evet' : 'Hayır'}</td>
+      <td>${yenidenGonderilebilir ? `<button class="ikincil yeniden-gonder-butonu" data-gorev-id="${k.gorevId}">Yeniden Gönder</button>` : ''}</td>`;
+    govde.appendChild(satir);
+  });
+  govde.querySelectorAll('.yeniden-gonder-butonu').forEach(buton => {
+    buton.addEventListener('click', async () => {
+      await apiFetch(`/gorevler/${buton.dataset.gorevId}/yeniden-dene`, { method: 'POST' });
+      dlqYukle();
+    });
+  });
+}
+
+document.getElementById('yenileGorevler').addEventListener('click', () => { gorevSayfa = 0; gorevleriYukle(); });
+document.getElementById('durumFiltre').addEventListener('change', () => { gorevSayfa = 0; gorevleriYukle(); });
+document.getElementById('tipFiltre').addEventListener('change', () => { gorevSayfa = 0; gorevleriYukle(); });
+document.getElementById('oncekiSayfa').addEventListener('click', () => { if (gorevSayfa > 0) { gorevSayfa--; gorevleriYukle(); } });
+document.getElementById('sonrakiSayfa').addEventListener('click', () => { gorevSayfa++; gorevleriYukle(); });
+
+async function ilkYuklemeYap() {
+  durumSecimleriniDoldur();
+  await gorevTanimlariniYukle();
+  await gorevleriYukle();
+  await metrikleriYukle();
+  setInterval(metrikleriYukle, 3000);
+}
+
+if (token) { uygulamayiGoster(); } else { girisEkraniniGoster(); }
+</script>
+</body>
+</html>
