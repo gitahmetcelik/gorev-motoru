@@ -15,8 +15,8 @@ ShedLock (dağıtık kilit), Flyway (şema geçişi).
 ## Karar
 
 `motor-cekirdek` sadece alan-bağımsız soyutlamaları taşır (`GorevHandler<P>`, `@GorevTipi`,
-`GorevGonderici`, `GorevDurumu`, `RetryPolitikasi`, `IdempotencyAnahtari`,
-`IlerlemeRaporlayici`) — hiçbir dağıtık sistem primitifini yeniden uygulamaz.
+`GorevGonderici`, `GorevOpsiyonlari`, `GorevDurumu`, `GorevBaglami`) — hiçbir dağıtık sistem
+primitifini yeniden uygulamaz.
 `motor-spring-starter` bu soyutlamaları RabbitMQ/Spring/ShedLock gibi kütüphanelerin üzerine
 ince bir auto-configuration katmanı olarak bağlar. Motor, "queue nasıl çalışır" sorusuna kendi
 cevabını üretmez; bunun yerine RabbitMQ'nun cevabını kullanır ve üstüne sadece domain-agnostik
@@ -31,4 +31,4 @@ görev soyutlamasını ekler.
 - Eksi: Motorun davranışı, sarmaladığı kütüphanelerin (özellikle RabbitMQ) davranış ve
   sınırlarına bağımlı kalıyor; kütüphane değişirse ince katman da değişmek zorunda.
 - Bilinçli olarak dışarıda bırakıldı: Kafka'ya event yayını, exactly-once semantiği — bkz.
-  README "Gelecek çalışma" bölümü.
+  README "Bilinen sınırlamalar" bölümü.

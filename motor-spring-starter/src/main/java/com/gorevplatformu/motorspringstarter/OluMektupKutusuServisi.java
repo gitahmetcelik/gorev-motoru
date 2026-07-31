@@ -36,8 +36,8 @@ public class OluMektupKutusuServisi {
 
         // deneme_sayisi kasten sifirlanmiyor: gorev_denemeleri'ndeki (gorev_id, deneme_no) UNIQUE kisiti
         // gorevin tum omru boyunca gecerli, sifirlama onceki denemelerle carpisan bir deneme_no uretirdi.
-        // Yeniden gonderim, kalan retry butcesiyle (varsa) devam eder - "MailHog'u ac, DLQ'dan yeniden
-        // gonder -> basarili" senaryosunda zaten tek bir basarili deneme yeterli.
+        // Yeniden gonderim, kalan retry butcesiyle (varsa) devam eder - kok neden duzeltildiyse
+        // zaten tek bir basarili deneme yeterli olur.
         gorev.durumGecisYap(GorevDurumu.BEKLIYOR);
         gorevRepository.save(gorev);
         gidenMesajRepository.save(new GidenMesaj(gorev.getId()));

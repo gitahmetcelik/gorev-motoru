@@ -56,7 +56,7 @@ public class DemoGorevBaslatici implements CommandLineRunner {
     private void echoTesti() {
         UUID echoGorevId = gorevGonderici.gonder(
                 "ornek.echo",
-                new OrnekEchoHandler.Payload("Faz 2 kapi testi"),
+                new OrnekEchoHandler.Payload("merhaba dunya"),
                 new GorevOpsiyonlari(UUID.randomUUID().toString(), 0, null)
         );
         log.info("DEMO ECHO: {}", echoGorevId);
@@ -109,7 +109,7 @@ public class DemoGorevBaslatici implements CommandLineRunner {
     private void retryVeDlqTesti() {
         UUID hataGorevId = gorevGonderici.gonder(
                 "ornek.hata-ver",
-                new OrnekHataVerHandler.Payload("kasitli-faz3-kapi-testi"),
+                new OrnekHataVerHandler.Payload("kasitli-hata-demo"),
                 new GorevOpsiyonlari(UUID.randomUUID().toString(), 0, null)
         );
         log.info("DEMO RETRY+DLQ: {} gonderildi, 3 deneme + backoff sonrasi DLQ'ya dusmesi bekleniyor", hataGorevId);

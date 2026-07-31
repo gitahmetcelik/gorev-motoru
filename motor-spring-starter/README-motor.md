@@ -5,8 +5,8 @@ Görev/iş kuyruğu motorunun Spring Boot 3 auto-configuration starter'ı. Postg
 retry+backoff, DLQ, idempotency, öncelik kuyrukları, ShedLock ile zamanlanmış görevler,
 işbirlikçi iptal, ve gözlemlenebilirlik (trace id, Micrometer metrikleri).
 
-Faz 5 itibarıyla **Motor v1.0 donduruldu** — bu modül artık kararlı kabul ediliyor,
-üzerine yeni domain servisleri (finans/bildirim/bakım) kuruluyor.
+Starter'ın davranışı ve genel API'si kararlı kabul edilir; üzerine yeni bir domain
+servisi kurmak isteyen bir tüketici, aşağıdaki adımları izleyerek entegre olabilir.
 
 ## Hızlı başlangıç
 
@@ -123,13 +123,13 @@ görevin id'sini döner. `oncelik` (>0 yüksek, 0 normal, <0 düşük) ve `planl
   - `gorev.sonuc{tip,sonuc}` — başarılı/başarısız/iptal sayaçları
   - `gorev.yeniden_deneme{tip}` — retry sayacı
 
-## Sınırlamalar / sonraki fazlara notlar
+## Sınırlamalar
 
-- `motor-api`'nin component-scan'i artık sadece kendi paketini (`com.gorevplatformu.motorapi`)
-  tarıyor; starter'ın tamamı auto-configuration ile geliyor. `finans-servisi`/`bildirim-servisi`/
-  `bakim-servisi` bugün boş — Faz 6+'da bu modüllere gerçek `@Component`/`@Entity` eklenince,
-  ya her domain modülü kendi auto-configuration'ını yazmalı, ya da `motor-api`'nin scan'i
-  genişletilmeli.
+- `motor-api`'nin component-scan'i sadece kendi paketini (`com.gorevplatformu.motorapi`) tarar;
+  starter'ın tamamı auto-configuration ile gelir. Motoru tüketen bir domain modülü kendi
+  `@Component`/`@Entity`'lerini ekleyecekse, ya kendi auto-configuration'ını yazmalı ya da
+  ana uygulamanın component-scan kapsamı genişletilmeli.
 - Flyway migration'ları starter'da değil `motor-api`'de duruyor (yukarıdaki "bilinen sınırlama").
-- Exactly-once semantiği yok, at-least-once + idempotency ile yaklaşılıyor (bkz
-  `Bilinçli Kapsam Dışı.md`).
+- Exactly-once semantiği yok, at-least-once + idempotency ile yaklaşılıyor — bu bilinçli bir
+  tasarım tercihi, dağıtık sistemlerde exactly-once garantisinin getirdiği karmaşıklık bu
+  motorun kapsamının dışında tutuldu.

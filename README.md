@@ -7,13 +7,11 @@ idempotency, öncelik kuyrukları, zamanlanmış (cron) görevler, işbirlikçi 
 izleme (trace id), Micrometer metrikleri ve JWT korumalı bir REST API + dashboard ile
 gelir.
 
-> Bu proje, daha büyük bir staj projesinin (fintech mobil uygulaması) altyapı motoru olarak
-> geliştirildi; burada bağımsız, domain'den arındırılmış bir proje olarak paylaşılıyor.
-
 ## Özellikler
 
-- **Transactional outbox** — görev + outbox kaydı aynı transaction'da yazılır, uygulama
-  çökse bile görev kaybolmaz (kanıtlandı: `SIGKILL` testi ile).
+- **Transactional outbox** — görev + outbox kaydı aynı transaction'da yazılır; uygulama
+  outbox yazıldıktan hemen sonra beklenmedik şekilde sonlansa bile görev kaybolmaz, kalıcı
+  kaydından başka bir instance tarafından devralınır.
 - **Retry + exponential backoff + jitter** — RabbitMQ'nun delayed-message plugin'i üzerinden,
   ayrı bir "gecikme" alt sistemi olmadan mevcut outbox'a entegre.
 - **İki katmanlı idempotency** — gönderimde UNIQUE+dedup, worker'da tekrar-teslimat guard'ı.
@@ -83,7 +81,8 @@ mvn -pl motor-api -am test -Dtest=GorevMotoruEntegrasyonTestleri
 
 - Flyway migration'ları starter'da değil `motor-api`'de duruyor — starter'ı başka bir
   uygulamada kullanmak isteyenler migration dosyalarını kendi projelerine kopyalamalı.
-- Gerçek bir domain/iş mantığı içermiyor — sadece 3 örnek handler (`ornek.echo/bekle/hata-ver`)
-  ile motorun kendisi kanıtlanmış durumda.
+- Gerçek bir domain/iş mantığı içermiyor — depoda yalnızca motorun davranışını gösteren 3
+  örnek handler (`ornek.echo/bekle/hata-ver`) bulunuyor; gerçek görev tipleri tüketici
+  uygulama tarafından yazılır.
 - Exactly-once semantiği yok (at-least-once + idempotency ile yaklaşılıyor), multi-tenancy/RBAC
   yok, dağıtık izleme toplayıcısı (Jaeger/Zipkin) yok — trace id MDC/JSON log seviyesinde kalıyor.

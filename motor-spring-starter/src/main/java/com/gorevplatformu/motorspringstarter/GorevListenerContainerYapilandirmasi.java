@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 
 /**
- * Faz4'ten itibaren tek gercek {@code @RabbitListener} tuketicisi DLQ dinleyicisi
- * (GorevZehirliMesajDinleyicisi) — ana oncelik kuyruklari artik push-model degil,
+ * Motordaki tek gercek {@code @RabbitListener} tuketicisi DLQ dinleyicisidir
+ * (GorevZehirliMesajDinleyicisi) — ana oncelik kuyruklari push-model degil,
  * GorevOncelikliTuketici'nin senkron basicGet donguisuyle tuketiliyor (kendi
  * graceful-shutdown'ini kendi @PreDestroy'unda yapiyor). Bu yuzden burada sadece
  * DLQ icin ozel bir container factory kaliyor.

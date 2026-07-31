@@ -32,11 +32,11 @@ public class GidenMesajYayincisi {
         this.objectMapper = objectMapper;
     }
 
-    // Faz4'ten itibaren birden fazla instance (api + worker node'lari) ayni anda ayaktayken bu
-    // metodun coklu instance'ta ayni unpublished satiri es zamanli okuyup IKI KEZ publish etmesini
-    // (ShedLock olmadan hicbir engel yoktu) ShedLock ile engelliyoruz. Faz3'teki idempotency guard
-    // (GorevMesajIsleyici) boyle bir cift-yayinin yol actigi ikinci teslimati zaten zararsizca
-    // yutuyordu, ama bu israfi (ve baska yaris kosullarini) kokten onlemek daha dogrusu.
+    // Birden fazla instance (api + worker node'lari) ayni anda ayaktayken bu metod, ayni
+    // unpublished satiri es zamanli okuyup IKI KEZ publish edebilir. GorevMesajIsleyici'deki
+    // idempotency guard boyle bir cift-yayinin yol actigi ikinci teslimati zararsizca yutar,
+    // ama bu israfi (ve baska olasi yaris kosullarini) kokten onlemek icin ShedLock ile
+    // ayni anda sadece bir instance'in bu metodu calistirmasi garanti ediliyor.
     @Scheduled(fixedDelay = 2000)
     @SchedulerLock(name = "gidenMesajYayinla", lockAtLeastFor = "PT1S", lockAtMostFor = "PT30S")
     @Transactional

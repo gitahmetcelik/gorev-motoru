@@ -19,7 +19,7 @@ import java.time.Duration;
 
 /**
  * Bir gorev mesajinin is mantigini (durum gecisleri, deneme kaydi, handler calistirma,
- * retry/DLQ) barindirir. Faz4'ten itibaren dogrudan bir RabbitMQ listener DEGIL — hem
+ * retry/DLQ) barindirir. Bilincli olarak dogrudan bir RabbitMQ listener degildir — hem
  * {@link GorevOncelikliTuketici} hem de (varsa) baska bir tetikleyici bu metodu cagirir,
  * boylece is mantigi tek yerde kalir.
  */

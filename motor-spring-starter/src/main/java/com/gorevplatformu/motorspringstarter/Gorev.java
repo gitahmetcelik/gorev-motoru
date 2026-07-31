@@ -67,9 +67,9 @@ public class Gorev {
     private boolean iptalIstendi;
 
     // Worker'in isle() metodu, handler calisirken tum sure boyunca ayni transaction'i acik
-    // tutuyor (Faz2'den beri); bu esnada API'nin ayri bir transaction'da yaptigi bir yazi (orn.
-    // iptal) versiyon kontrolu olmadan sessizce ezilebilirdi - hangisi SON commit ederse o kazanirdi,
-    // mantiksal olarak yanlis olsa bile. @Version, gec commit eden tarafin
+    // tutuyor; bu esnada API'nin ayri bir transaction'da yaptigi bir yazi (orn. iptal) versiyon
+    // kontrolu olmadan sessizce ezilebilir - hangisi SON commit ederse o kazanir, mantiksal
+    // olarak yanlis olsa bile. @Version, gec commit eden tarafin
     // ObjectOptimisticLockingFailureException almasini saglar (bkz GorevOncelikliTuketici,
     // GorevYonetimServisi - ikisi de bu istisnayi bilerek/yumusakca ele aliyor).
     @Version

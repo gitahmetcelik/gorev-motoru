@@ -15,9 +15,8 @@ karşılığı olmayan bir "hayalet" görev broker'da dolaşır.
 
 Aynı transaction içinde iş kaydı ile birlikte `giden_mesajlar` (outbox) tablosuna da yaz.
 Ayrı bir yayıncı (scheduled poller) bu tabloyu okuyup RabbitMQ'ya taşır ve
-`yayinlandi_mi = true` olarak işaretler. Bu, Faz 2'de motor çekirdeğiyle birlikte
-uygulanacak — sonradan eklemek tüm gönderim yolunun yeniden yazılması anlamına gelir,
-bu yüzden temel bir kararın parçası.
+`yayinlandi_mi = true` olarak işaretler. Bu, motor çekirdeğinin temel bir parçası olarak
+tasarlandı — sonradan eklemek tüm gönderim yolunun yeniden yazılması anlamına gelirdi.
 
 ## Sonuçlar
 

@@ -52,7 +52,7 @@ public class ZamanlanmisGorevCalistirici {
         // Idempotency anahtari hedeflenen calisma zamanindan turetiliyor (simdiki zamandan degil):
         // ShedLock zaten coklu-instance yarisini engelliyor, ama bu ikinci bir guvence katmani —
         // ayni slot herhangi bir sebeple iki kez tetiklenmeye calisilirsa (orn. bu metod commit
-        // olmadan yeniden calisirsa), mevcut idempotency-dedup (Faz3) ikinci Gorev'i engeller.
+        // olmadan yeniden calisirsa), gonderimdeki idempotency-dedup ikinci Gorev'i engeller.
         String idempotencyAnahtari = "zamanlanmis:" + zamanlanmis.getId() + ":" + hedeflenenZaman.toEpochMilli();
         try {
             JsonNode payloadNode = objectMapper.readTree(zamanlanmis.getPayload());

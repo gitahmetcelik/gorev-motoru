@@ -16,9 +16,9 @@ Tek PostgreSQL container, `motor` ve `finans` için ayrı şema. Cross-schema fo
 **yasak** — motor ile domain arasındaki tek bağ, `payload` içindeki id'ler (örn. `islemId`).
 Motor bu id'leri opak bir değer olarak taşır, doğrulamaz.
 
-İki ayrı container, 4 haftalık bir staj projesi için gereksiz operasyonel yük (iki bağlantı
-havuzu, iki healthcheck, iki yedekleme stratejisi) getirirdi. Şema ayrımı, mantıksal
-izolasyonu tek container'la sağlıyor.
+İki ayrı container, bu ölçekte gereksiz operasyonel yük (iki bağlantı havuzu, iki
+healthcheck, iki yedekleme stratejisi) getirir. Şema ayrımı, mantıksal izolasyonu tek
+container'la sağlıyor.
 
 ## Sonuçlar
 

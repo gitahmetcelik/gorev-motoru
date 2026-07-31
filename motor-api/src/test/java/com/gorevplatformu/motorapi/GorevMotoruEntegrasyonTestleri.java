@@ -32,8 +32,8 @@ import static org.awaitility.Awaitility.await;
 
 /**
  * Motorun (retry, DLQ, idempotency, isbirlikci iptal) gercek Postgres + RabbitMQ container'lariyla
- * uctan uca dogrulandigi entegrasyon testleri. Mevcut ornek.echo/bekle/hata-ver demo handler'lari
- * (motor-api'de, demo profili aktif olmadan da her zaman taraniyor) reuse ediliyor.
+ * uctan uca dogrulandigi entegrasyon testleri. Mevcut ornek.echo/bekle/hata-ver ornek handler'lari
+ * (motor-api'de, demo profili aktif olmadan da her zaman taraniyor) yeniden kullanilir.
  */
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
