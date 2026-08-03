@@ -74,7 +74,7 @@ Dashboard: `http://localhost:8080/dashboard/index.html` (veya `worker,demo` tek 
 
 Entegrasyon testleri (Docker gerekli):
 ```bash
-mvn -pl motor-api -am test -Dtest=GorevMotoruEntegrasyonTestleri
+mvn -pl motor-api -am test
 ```
 
 ## Bilinen sınırlamalar
