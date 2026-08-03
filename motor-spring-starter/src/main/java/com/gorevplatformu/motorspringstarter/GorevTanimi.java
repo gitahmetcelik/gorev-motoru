@@ -35,17 +35,6 @@ public class GorevTanimi {
     protected GorevTanimi() {
     }
 
-    public GorevTanimi(String tip, String kuyruk, Integer varsayilanOncelik, Integer varsayilanRetry,
-                        Integer timeoutSn) {
-        this.tip = tip;
-        this.versiyon = 1;
-        this.kuyruk = kuyruk;
-        this.varsayilanOncelik = varsayilanOncelik;
-        this.varsayilanRetry = varsayilanRetry;
-        this.timeoutSn = timeoutSn;
-        this.olusturulma = Instant.now();
-    }
-
     public String getTip() {
         return tip;
     }

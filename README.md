@@ -74,13 +74,11 @@ Dashboard: `http://localhost:8080/dashboard/index.html` (veya `worker,demo` tek 
 
 Entegrasyon testleri (Docker gerekli):
 ```bash
-mvn -pl motor-api -am test -Dtest=GorevMotoruEntegrasyonTestleri
+mvn -pl motor-api -am test
 ```
 
 ## Bilinen sınırlamalar
 
-- Flyway migration'ları starter'da değil `motor-api`'de duruyor — starter'ı başka bir
-  uygulamada kullanmak isteyenler migration dosyalarını kendi projelerine kopyalamalı.
 - Gerçek bir domain/iş mantığı içermiyor — depoda yalnızca motorun davranışını gösteren 3
   örnek handler (`ornek.echo/bekle/hata-ver`) bulunuyor; gerçek görev tipleri tüketici
   uygulama tarafından yazılır.

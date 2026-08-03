@@ -16,18 +16,26 @@ servisi kurmak isteyen bir tüketici, aşağıdaki adımları izleyerek entegre 
 <dependency>
     <groupId>com.gorevplatformu</groupId>
     <artifactId>motor-spring-starter</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
 Starter kendi kendine yeterlidir: `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-üzerinden otomatik yüklenir, tüketici uygulamanın `scanBasePackages`/`@EnableJpaRepositories`/
-`@EntityScan` ile elle dahil etmesine gerek yoktur.
+üzerinden otomatik yüklenir. Tüketici uygulamanın kendi `@Component`/`@Entity`/`@Repository`'leri
+normal Spring Boot davranışıyla (ana `@SpringBootApplication` sınıfının paketinden aşağı doğru)
+taranır — starter'ın kendi paketini görünür kılmak için ekstra bir `scanBasePackages`/
+`@EnableJpaRepositories`/`@EntityScan` bildirmeye gerek yoktur, starter ikisini de kendi
+`MotorOtomatikYapilandirmasi`'nda birlikte kaydeder.
 
-**Bilinen sınırlama:** `motor` şemasının Flyway migration'ları (`V1`-`V5`) şu an
-`motor-api` modülünde duruyor, starter'ın kendisinde değil — tüketici uygulama bu migration
-dosyalarını kendi `db/migration` klasörüne kopyalamalı (veya `motor-api`'yi çalıştırılabilir
-jar olarak kullanmalı).
+`motor` şemasının Flyway migration'ları (`V1`-`V5`) starter'ın kendi kaynaklarında
+(`classpath:db/motor-migration`) taşınır — tüketici uygulama kendi migration'larıyla birlikte
+aşağıdaki gibi iki konum belirtmeli (kopyalama gerekmez):
+
+```yaml
+spring:
+  flyway:
+    locations: classpath:db/motor-migration,classpath:db/migration
+```
 
 ### Zorunlu `application.yml` alanları
 
@@ -38,6 +46,7 @@ spring:
     username: gorev
     password: ...
   flyway:
+    locations: classpath:db/motor-migration,classpath:db/migration
     schemas: motor
     default-schema: motor
   rabbitmq:
@@ -51,9 +60,55 @@ motor:
     tuketici-aktif: true   # bu instance'in oncelik kuyruklarini gercekten tuketip tuketmeyecegi
 ```
 
+Tüketici kendi domain şemasını da kullanıyorsa (`spring.flyway.schemas: motor,<kendi-seman>`),
+Flyway tüm konumlardaki migration'ları tek bir sürüm zincirinde uygular — `V1`-`V5` numaraları
+motora ait olduğu için kendi migration'larına `V6`'dan başlaman gerekir.
+
 RabbitMQ, `x-delayed-message` plugin'ini destekleyen bir image gerektirir (bkz
 `docker-compose.yml`, `heidiks/rabbitmq-delayed-message-exchange`) — retry backoff ve
 gecikmeli görevler bu plugin'e dayanıyor.
+
+### Starter'ın getirmediği, tüketicinin kendi eklemesi gereken bağımlılıklar
+
+Bağımsız bir scratch tüketiciyle (`0.1.0-SNAPSHOT` kapı testi) doğrulandı — starter bilerek
+dar tutulmuş, aşağıdaki üç bağımlılık olmadan uygulama açılışta hata verir:
+
+```xml
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-json</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+- `flyway-core`+`flyway-database-postgresql` olmadan Flyway auto-configuration hiç devreye
+  girmez (`@ConditionalOnClass(Flyway.class)`), `motor` şeması hiç oluşmaz, ilk JPA erişiminde
+  "schema motor does not exist" hatası alınır.
+- `spring-boot-starter-json` (veya tam web starter'ı) olmadan `Jackson2ObjectMapperBuilder`
+  sınıfı (spring-web'de) bulunamaz, Boot'un varsayılan `ObjectMapper` bean'i oluşmaz —
+  `RabbitMqTopolojisi`'nin mesaj dönüştürücüsü bunu ister.
+- `spring-boot-starter-actuator` (veya başka bir `micrometer-registry-*`) olmadan somut bir
+  `MeterRegistry` bean'i oluşmaz — starter sadece `micrometer-core` (arayüzler) taşıyor.
+
+### Açılışta görev göndermeyle ilgili bir tuzak
+
+`GorevOncelikliTuketici`'nin arka plan tüketici thread'i `ApplicationReadyEvent`'te başlar.
+Spring Boot'ta `CommandLineRunner`/`ApplicationRunner` bean'leri **`ApplicationReadyEvent`'ten
+önce** çalışır (`SpringApplication.run()` sırası: `started` → `callRunners` → `ready`). Bu
+yüzden bir başlangıç runner'ı gönderdiği görevin sonucunu **aynı thread'de bloke olarak
+bekliyorsa**, görevi tamamlayacak tüketici hiç başlamamış olur (kendi kendini kilitleme).
+Görev gönderip sonucunu görmek isteyen bir runner, bekleme kısmını ayrı bir thread'e almalı.
 
 ## Handler yazma
 
@@ -125,11 +180,11 @@ görevin id'sini döner. `oncelik` (>0 yüksek, 0 normal, <0 düşük) ve `planl
 
 ## Sınırlamalar
 
-- `motor-api`'nin component-scan'i sadece kendi paketini (`com.gorevplatformu.motorapi`) tarar;
-  starter'ın tamamı auto-configuration ile gelir. Motoru tüketen bir domain modülü kendi
-  `@Component`/`@Entity`'lerini ekleyecekse, ya kendi auto-configuration'ını yazmalı ya da
-  ana uygulamanın component-scan kapsamı genişletilmeli.
-- Flyway migration'ları starter'da değil `motor-api`'de duruyor (yukarıdaki "bilinen sınırlama").
+- `GorevYonetimServisi`/`OluMektupKutusuServisi`'nin sunduğu yüzey dar (iptal/yeniden-dene/
+  yeniden-gönder + `ozet(UUID)` sorgusu) — teslimat/iş geçmişinin tam görünürlüğü isteyen bir
+  ürün kendi domain şemasında kendi kayıtlarını tutmalı, motor şemasına sıkı bağlanmamalı.
 - Exactly-once semantiği yok, at-least-once + idempotency ile yaklaşılıyor — bu bilinçli bir
   tasarım tercihi, dağıtık sistemlerde exactly-once garantisinin getirdiği karmaşıklık bu
   motorun kapsamının dışında tutuldu.
+- REST API, JWT güvenliği ve statik dashboard `motor-api` modülünde — starter'a bağımlılık
+  bunları içermez, sadece motorun çalıştırma/kalıcılık katmanını verir.
