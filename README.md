@@ -79,8 +79,6 @@ mvn -pl motor-api -am test -Dtest=GorevMotoruEntegrasyonTestleri
 
 ## Bilinen sınırlamalar
 
-- Flyway migration'ları starter'da değil `motor-api`'de duruyor — starter'ı başka bir
-  uygulamada kullanmak isteyenler migration dosyalarını kendi projelerine kopyalamalı.
 - Gerçek bir domain/iş mantığı içermiyor — depoda yalnızca motorun davranışını gösteren 3
   örnek handler (`ornek.echo/bekle/hata-ver`) bulunuyor; gerçek görev tipleri tüketici
   uygulama tarafından yazılır.

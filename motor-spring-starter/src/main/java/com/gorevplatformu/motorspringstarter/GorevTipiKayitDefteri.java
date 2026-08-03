@@ -9,6 +9,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,12 +65,9 @@ public class GorevTipiKayitDefteri {
     public void kataloguSenkronla() {
         for (Map.Entry<String, GorevTipi> girdi : anotasyonlar.entrySet()) {
             String tip = girdi.getKey();
-            if (gorevTanimiRepository.existsById(tip)) {
-                continue;
-            }
             GorevTipi anotasyon = girdi.getValue();
-            gorevTanimiRepository.save(new GorevTanimi(tip, RabbitMqTopolojisi.kuyrukAdi(anotasyon.oncelik()),
-                    anotasyon.oncelik(), anotasyon.maxDeneme(), anotasyon.timeoutSaniye()));
+            gorevTanimiRepository.upsertYoksa(tip, RabbitMqTopolojisi.kuyrukAdi(anotasyon.oncelik()),
+                    anotasyon.oncelik(), anotasyon.maxDeneme(), anotasyon.timeoutSaniye(), Instant.now());
         }
     }
 }
