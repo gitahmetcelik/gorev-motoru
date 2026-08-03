@@ -2,7 +2,7 @@ package com.gorevplatformu.motorspringstarter;
 
 import com.gorevplatformu.motorcekirdek.GorevHandler;
 import com.gorevplatformu.motorcekirdek.GorevTipi;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -50,7 +50,16 @@ public class GorevTipiKayitDefteri {
         return anotasyon;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    // ApplicationReadyEvent DEGIL: CommandLineRunner/ApplicationRunner bean'leri
+    // (bkz DemoGorevBaslatici, ve dis tuketicilerin kendi startup runner'lari)
+    // SpringApplication.run() icinde ApplicationReadyEvent'ten ONCE calisir
+    // (listeners.started() -> callRunners() -> listeners.ready()). Katalog senkronu
+    // ApplicationReadyEvent'i beklerse, acilista hemen gorev gonderen bir runner
+    // gorev_tanimlari FK ihlaline carpar (satir henuz yazilmamis olur) — ilk dis
+    // tuketicide (scratch-tuketici kapi testi) tazeden bulundu. ApplicationStartedEvent,
+    // context tamamen refresh olduktan (repository/Flyway dahil) hemen sonra ama
+    // runner'lardan once atesleniyor, bu yarisin onune geciyor.
+    @EventListener(ApplicationStartedEvent.class)
     @Transactional
     public void kataloguSenkronla() {
         for (Map.Entry<String, GorevTipi> girdi : anotasyonlar.entrySet()) {

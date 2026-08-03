@@ -4,6 +4,7 @@ import com.gorevplatformu.motorcekirdek.GorevDurumu;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -58,5 +59,18 @@ public class GorevYonetimServisi {
                     "Bu olu mektup kutusu kaydi zaten yeniden gonderildi: " + kayit.getId());
         }
         oluMektupKutusuServisi.yenidenGonder(kayit.getId());
+    }
+
+    /**
+     * Bir gorevin kucuk, salt-okunur ozetini doner. Teslimat/adim detayini kendi semasinda
+     * tutan bir tuketicinin, sadece guncel durumu/son hatayi/trace id'yi gormek icin motor
+     * semasina genis capli bagimlilik kurmasina gerek kalmasin diye var — GorevRepository'yi
+     * dogrudan enjekte etmenin dar bir alternatifi.
+     */
+    @Transactional(readOnly = true)
+    public Optional<GorevOzeti> ozet(UUID gorevId) {
+        return gorevRepository.findById(gorevId)
+                .map(gorev -> new GorevOzeti(gorev.getId(), gorev.getDurum(), gorev.getDenemeSayisi(),
+                        gorev.getHata(), gorev.getTraceId()));
     }
 }
