@@ -6,7 +6,7 @@
 
     <groupId>com.gorevplatformu</groupId>
     <artifactId>gorev-platformu</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -73,4 +73,15 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <!-- motor-cekirdek ve motor-spring-starter'i dis tuketicilere (webhook-platformu)
+         acmak icin GitHub Packages Maven registry'sine publish edilir (bkz webhook-platformu
+         Faz 5.0 karari - local .m2'ye guvenmek CI/dagitim ortaminda calismiyordu). -->
+    <distributionManagement>
+        <repository>
+            <id>github-gorev-motoru</id>
+            <name>GitHub Packages - gorev-motoru</name>
+            <url>https://maven.pkg.github.com/gitahmetcelik/gorev-motoru</url>
+        </repository>
+    </distributionManagement>
 </project>

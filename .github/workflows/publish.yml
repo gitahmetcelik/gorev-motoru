@@ -1,0 +1,37 @@
+name: GitHub Packages'a publish et
+
+# motor-cekirdek ve motor-spring-starter'i (root pom dahil) GitHub Packages Maven
+# registry'sine deploy eder - webhook-platformu gibi dis tuketicilerin bu depoya
+# local .m2 gerekmeden PAT ile erisebilmesi icin (bkz webhook-platformu Faz 5.0).
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "pom.xml"
+      - "motor-cekirdek/**"
+      - "motor-spring-starter/**"
+      - ".github/workflows/publish.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          server-id: github-gorev-motoru
+          settings-path: ${{ github.workspace }}
+
+      - name: motor-api haric reactor'u deploy et
+        run: mvn -B -DskipTests -s $GITHUB_WORKSPACE/settings.xml -pl "!motor-api" deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
