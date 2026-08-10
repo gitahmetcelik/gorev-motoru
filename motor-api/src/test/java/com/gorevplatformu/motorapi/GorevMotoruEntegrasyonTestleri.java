@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -39,8 +41,13 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GorevMotoruEntegrasyonTestleri {
 
+    // Faz 9: artik @ServiceConnection DEGIL, acik spring.datasource.* ozellikleri kullaniliyor —
+    // MotorGocOncesiCalistirici (motorun ozel Flyway calistiricisi) context refresh'ten once,
+    // Environment'tan duz property okuyor; @ServiceConnection'in JdbcConnectionDetails bean'i o
+    // asamada henuz yok. Ayni desen hub'in AbstractTestcontainersTest'i ve webhook-platformu'nun
+    // UctanUcaOrtakAyarlar'i tarafindan zaten kullaniliyor (gercek uretim yapilandirmalari da
+    // duz spring.datasource.* kullaniyor, @ServiceConnection sadece bir test kolayligi).
     @Container
-    @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Container
@@ -48,6 +55,13 @@ class GorevMotoruEntegrasyonTestleri {
     static RabbitMQContainer rabbitmq = new RabbitMQContainer(
             DockerImageName.parse("heidiks/rabbitmq-delayed-message-exchange:3.13.0-management")
                     .asCompatibleSubstituteFor("rabbitmq"));
+
+    @DynamicPropertySource
+    static void ozellikler(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 
     @Autowired
     private GorevGonderici gorevGonderici;

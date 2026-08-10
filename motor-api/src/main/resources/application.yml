@@ -12,10 +12,13 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+  # Faz 9: motor-api'nin kendi migration'i yok, semasi tamamen motorunki - artik
+  # MotorGocOncesiCalistirici (motor-spring-starter, kendi ozel Flyway tarihi
+  # motor_schema_history uzerinden) bunu tek basina hallediyor. Boot'un kendi Flyway
+  # bean'i burada tamamen kapali - acik kalsaydi ayni V1-V5'i ikinci kez calistirmaya
+  # calisir, motor.gorevler zaten var oldugu icin patlardi.
   flyway:
-    locations: classpath:db/motor-migration
-    schemas: motor
-    default-schema: motor
+    enabled: false
 
   mvc:
     problemdetails:
