@@ -1,4 +1,9 @@
-CREATE TABLE gorev_tanimlari (
+-- Faz 9 (ecommerce-hub-plani-v5.md): motor artik kendi ozel Flyway calismasinda, kendi
+-- semasinda calisiyor. Once bu semanin var oldugundan emin ol - eskiden tuketicinin
+-- "schemas" listesi + Flyway'in createSchemas'i bunu ustumuze aliyordu, artik almiyor.
+CREATE SCHEMA IF NOT EXISTS motor;
+
+CREATE TABLE motor.gorev_tanimlari (
     tip                 TEXT PRIMARY KEY,
     versiyon            INT NOT NULL DEFAULT 1,
     kuyruk              TEXT NOT NULL,
@@ -8,9 +13,9 @@ CREATE TABLE gorev_tanimlari (
     olusturulma         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE gorevler (
+CREATE TABLE motor.gorevler (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tip                  TEXT NOT NULL REFERENCES gorev_tanimlari (tip),
+    tip                  TEXT NOT NULL REFERENCES motor.gorev_tanimlari (tip),
     payload              JSONB NOT NULL,
     durum                TEXT NOT NULL DEFAULT 'BEKLIYOR'
                              CHECK (durum IN (
@@ -30,14 +35,14 @@ CREATE TABLE gorevler (
     guncellenme          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_gorevler_durum ON gorevler (durum);
-CREATE INDEX idx_gorevler_tip ON gorevler (tip);
-CREATE INDEX idx_gorevler_planlanan_zaman ON gorevler (planlanan_zaman)
+CREATE INDEX idx_gorevler_durum ON motor.gorevler (durum);
+CREATE INDEX idx_gorevler_tip ON motor.gorevler (tip);
+CREATE INDEX idx_gorevler_planlanan_zaman ON motor.gorevler (planlanan_zaman)
     WHERE durum = 'BEKLIYOR';
 
-CREATE TABLE gorev_denemeleri (
+CREATE TABLE motor.gorev_denemeleri (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    gorev_id       UUID NOT NULL REFERENCES gorevler (id),
+    gorev_id       UUID NOT NULL REFERENCES motor.gorevler (id),
     deneme_no      INT NOT NULL,
     baslangic      TIMESTAMPTZ NOT NULL DEFAULT now(),
     bitis          TIMESTAMPTZ,
@@ -48,11 +53,11 @@ CREATE TABLE gorev_denemeleri (
     UNIQUE (gorev_id, deneme_no)
 );
 
-CREATE INDEX idx_gorev_denemeleri_gorev_id ON gorev_denemeleri (gorev_id);
+CREATE INDEX idx_gorev_denemeleri_gorev_id ON motor.gorev_denemeleri (gorev_id);
 
-CREATE TABLE zamanlanmis_gorevler (
+CREATE TABLE motor.zamanlanmis_gorevler (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tip              TEXT NOT NULL REFERENCES gorev_tanimlari (tip),
+    tip              TEXT NOT NULL REFERENCES motor.gorev_tanimlari (tip),
     cron_ifadesi     TEXT NOT NULL,
     payload          JSONB NOT NULL,
     aktif            BOOLEAN NOT NULL DEFAULT true,
@@ -60,25 +65,25 @@ CREATE TABLE zamanlanmis_gorevler (
     sonraki_calisma  TIMESTAMPTZ
 );
 
-CREATE INDEX idx_zamanlanmis_gorevler_aktif ON zamanlanmis_gorevler (aktif, sonraki_calisma);
+CREATE INDEX idx_zamanlanmis_gorevler_aktif ON motor.zamanlanmis_gorevler (aktif, sonraki_calisma);
 
-CREATE TABLE giden_mesajlar (
+CREATE TABLE motor.giden_mesajlar (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    gorev_id      UUID NOT NULL REFERENCES gorevler (id),
+    gorev_id      UUID NOT NULL REFERENCES motor.gorevler (id),
     yayinlandi_mi BOOLEAN NOT NULL DEFAULT false,
     olusturulma   TIMESTAMPTZ NOT NULL DEFAULT now(),
     deneme        INT NOT NULL DEFAULT 0
 );
 
-CREATE INDEX idx_giden_mesajlar_yayinlanmamis ON giden_mesajlar (olusturulma)
+CREATE INDEX idx_giden_mesajlar_yayinlanmamis ON motor.giden_mesajlar (olusturulma)
     WHERE yayinlandi_mi = false;
 
-CREATE TABLE olu_mektup_kutusu (
+CREATE TABLE motor.olu_mektup_kutusu (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    gorev_id              UUID NOT NULL REFERENCES gorevler (id),
+    gorev_id              UUID NOT NULL REFERENCES motor.gorevler (id),
     son_hata              TEXT NOT NULL,
     giris_zamani          TIMESTAMPTZ NOT NULL DEFAULT now(),
     yeniden_gonderildi_mi BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE INDEX idx_olu_mektup_kutusu_gorev_id ON olu_mektup_kutusu (gorev_id);
+CREATE INDEX idx_olu_mektup_kutusu_gorev_id ON motor.olu_mektup_kutusu (gorev_id);

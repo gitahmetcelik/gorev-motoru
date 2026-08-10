@@ -1,5 +1,5 @@
 -- ShedLock: coklu instance'ta zamanlanmis-gorev tetikleyicisinin tek calismasini garantiler.
-CREATE TABLE shedlock (
+CREATE TABLE motor.shedlock (
     name       VARCHAR(64)  NOT NULL PRIMARY KEY,
     lock_until TIMESTAMP(3) NOT NULL,
     locked_at  TIMESTAMP(3) NOT NULL,

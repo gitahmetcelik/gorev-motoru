@@ -16,7 +16,7 @@ servisi kurmak isteyen bir tüketici, aşağıdaki adımları izleyerek entegre 
 <dependency>
     <groupId>com.gorevplatformu</groupId>
     <artifactId>motor-spring-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
@@ -27,15 +27,19 @@ taranır — starter'ın kendi paketini görünür kılmak için ekstra bir `sca
 `@EnableJpaRepositories`/`@EntityScan` bildirmeye gerek yoktur, starter ikisini de kendi
 `MotorOtomatikYapilandirmasi`'nda birlikte kaydeder.
 
-`motor` şemasının Flyway migration'ları (`V1`-`V5`) starter'ın kendi kaynaklarında
-(`classpath:db/motor-migration`) taşınır — tüketici uygulama kendi migration'larıyla birlikte
-aşağıdaki gibi iki konum belirtmeli (kopyalama gerekmez):
+**Migration izolasyonu (0.2.0+):** `motor` şemasının Flyway migration'ları (`V1`-`V5`) artık
+starter'ın kendi `MotorGocOncesiCalistirici`'si tarafından, context açılmadan önce, **ayrı bir
+Flyway koşusuyla** (kendi tarih tablosu `motor.motor_schema_history`) otomatik uygulanır.
+Tüketicinin `spring.flyway.locations/schemas/default-schema`'sına motoru dahil etmesine
+**gerek yoktur** — tüketici kendi migration zincirini istediği yerden (`V1`'den bile)
+başlatabilir, motorunkiyle numara çakışması diye endişelenmesi gerekmez. Var olan bir DB'de
+(motor'un eski, paylaşılan-tarihli sürümünden yükseliyorsanız) bu koşu otomatik `baseline` alır,
+eski tarihi silmez.
 
-```yaml
-spring:
-  flyway:
-    locations: classpath:db/motor-migration,classpath:db/migration
-```
+İstisnai olarak motorun kendi migration koşusunu kapatmak isterseniz (örn. tamamen elle
+yönetilen bir şema): `motor.flyway.enabled: false`. Bu, tüketicinin **kendi** migration'ını
+açıp kapatan standart `spring.flyway.enabled`'dan **ayrı bir anahtardır** — ikisini
+karıştırmayın.
 
 ### Zorunlu `application.yml` alanları
 
@@ -46,9 +50,7 @@ spring:
     username: gorev
     password: ...
   flyway:
-    locations: classpath:db/motor-migration,classpath:db/migration
-    schemas: motor
-    default-schema: motor
+    locations: classpath:db/migration   # sadece KENDI migration'larinizin konumu
   rabbitmq:
     host: localhost
     port: 5672
@@ -59,10 +61,6 @@ motor:
   worker:
     tuketici-aktif: true   # bu instance'in oncelik kuyruklarini gercekten tuketip tuketmeyecegi
 ```
-
-Tüketici kendi domain şemasını da kullanıyorsa (`spring.flyway.schemas: motor,<kendi-seman>`),
-Flyway tüm konumlardaki migration'ları tek bir sürüm zincirinde uygular — `V1`-`V5` numaraları
-motora ait olduğu için kendi migration'larına `V6`'dan başlaman gerekir.
 
 RabbitMQ, `x-delayed-message` plugin'ini destekleyen bir image gerektirir (bkz
 `docker-compose.yml`, `heidiks/rabbitmq-delayed-message-exchange`) — retry backoff ve
